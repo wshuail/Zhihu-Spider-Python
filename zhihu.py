@@ -32,8 +32,6 @@ class ZhihuLogin(object):
 	config.read('config.ini')
 	self.email = config.get('info', 'email')
 	self.password = config.get('info', 'password')     
-	self.email = email
-        self.password = password
 
 	# Create an instance of requests(module)
 	self.session = requests.session()
