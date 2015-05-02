@@ -21,7 +21,7 @@ Here is the [README](https://github.com/wangshuailong/Zhihu-Monitor-Python/blob/
 - 被关注最多回答者粉丝数    
 - 问题关注人数  
 - 关注该问题者粉丝总数  
-- 被关注最多的关注者粉丝数  
+- 被关注最多的关注者粉丝数     
 4. 将数据存入MySQL数据库。  
 5. 通过分时段抓取，就可以获得每个问题各项数据在时间序列上变化曲线。  
 <br/>
