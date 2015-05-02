@@ -3,6 +3,9 @@
 ####简介  
 这是一个能够抓取[知乎](http://www.zhihu.com/)问题页面相关数据的Python爬虫。
 目的是分析影响一个问题诞生后，影响其活跃度的相关因素。
+  
+Here is the [README](https://github.com/wangshuailong/Zhihu-Monitor-Python/blob/master/README_English.md) file in English.
+  
 <br/>
 具体来说，该爬虫可以实现：
 1. 登陆知乎。
@@ -49,7 +52,8 @@ Ubuntu下MySQLdb可通过如下方式安装
 1. 首先配置config.ini文件，写上自己的知乎登录邮箱和密码。
 2. 如果需要使用MySQL，还需要在Zhihu.py文件546行配置连接MySQL的命令，因为~~不同平台和个人设置差异较大~~我比较懒，该问题未做深入研究。
 3. 程序主体都在zhihu.py里，通过collector.py和monitor.py执行。collector负责收集问题，可以手动修改问题数量（默认为10000个）。问题会被写入question_pool.txt的自动生成文件中。monitor可以读取问题，抓取相关数据，并将其存入MySQL。  
-<br/>
+<br/>  
+
 ####可能出现的情况
 1. 编码异常，因为编码方式在不同平台间有所差异~~是个比较坑爹的问题~~！！
 2. 运行之后如果显示'Login Successfully !!!'就表示登录成功了。一切正常！
@@ -66,7 +70,7 @@ Ubuntu下MySQLdb可通过如下方式安装
 
 <br/>
 #### 联系我
-Github: [Shauilong WANG](https://github.com/wangshuailong)
+Github: [Shauilong WANG](https://github.com/wangshuailong)       
 Email: oopswangsl@gmail.com
 
 <br/>
