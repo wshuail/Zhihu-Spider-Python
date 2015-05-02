@@ -50,7 +50,7 @@ Ubuntu下MySQLdb可通过如下方式安装
 <br/>
 ####如何使用  
 1. 首先配置config.ini文件，写上自己的知乎登录邮箱和密码。
-2. 如果需要使用MySQL，还需要在Zhihu.py文件546行配置连接MySQL的命令，因为~~不同平台和个人设置差异较大~~我比较懒，该问题未做深入研究。
+2. 如果需要使用MySQL，还需要在Zhihu.py文件546行配置连接MySQL的命令，因为不同平台和个人设置差异较大~~我懒得弄~~，该问题未做深入研究。
 3. 程序主体都在zhihu.py里，通过collector.py和monitor.py执行。collector负责收集问题，可以手动修改问题数量（默认为10000个）。问题会被写入question_pool.txt的自动生成文件中。monitor可以读取问题，抓取相关数据，并将其存入MySQL。  
 <br/>  
 
