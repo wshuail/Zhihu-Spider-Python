@@ -10,7 +10,11 @@ Here is the [README](https://github.com/wangshuailong/Zhihu-Monitor-Python/blob/
 具体来说，该爬虫可以实现：  
 1. 登陆知乎。  
 2. 抓取知乎上最新提出的问题。  
-3. 抓取这些问题的相关数据，包括在抓取时间点时:    
+3. 抓取这些问题的相关数据。
+4. 将数据存入MySQL数据库。  
+5. 通过分时段抓取，就可以获得每个问题各项数据在时间序列上变化曲线。    
+
+目标数据包括     
 - 标题长度  
 - 问题描述长度    
 - 页面访问人数  
@@ -22,8 +26,7 @@ Here is the [README](https://github.com/wangshuailong/Zhihu-Monitor-Python/blob/
 - 问题关注人数  
 - 关注该问题者粉丝总数  
 - 被关注最多的关注者粉丝数     
-4. 将数据存入MySQL数据库。  
-5. 通过分时段抓取，就可以获得每个问题各项数据在时间序列上变化曲线。  
+ 
 <br/>
  
 参阅了[egrcc](https://github.com/egrcc)的[zhihu-python](https://github.com/egrcc/zhihu-python)，和[7sDream](https://github.com/7sDream)的[zhihu-py3](https://github.com/7sDream/zhihu-py3)两个项目。
