@@ -9,9 +9,9 @@ Here is the [README](https://github.com/wangshuailong/Zhihu-Monitor-Python/blob/
 <br/>
 具体来说，该爬虫可以实现：  
 1. 登陆知乎。  
-2. 抓取知乎上最新提出的问题。  
-3. 抓取这些问题的相关数据。
-4. 将数据存入MySQL数据库。  
+2. 抓取知乎上最新提出的问题。    
+3. 抓取这些问题的相关数据。  
+4. 将数据存入MySQL数据库。    
 5. 通过分时段抓取，就可以获得每个问题各项数据在时间序列上变化曲线。    
 
 目标数据包括     
@@ -33,8 +33,8 @@ Here is the [README](https://github.com/wangshuailong/Zhihu-Monitor-Python/blob/
 
 <br/>
 ####依赖：  
--[Beautiful Soup](http://www.crummy.com/software/BeautifulSoup/)  
--[requests](https://github.com/kennethreitz/requests)
+-[Beautiful Soup](http://www.crummy.com/software/BeautifulSoup/)   
+-[requests](https://github.com/kennethreitz/requests)   
 -[MySQLdb](http://mysql-python.sourceforge.net/MySQLdb.html)
 
 requests和beautifulsoup4可以使用pip来安装：
