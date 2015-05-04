@@ -126,8 +126,7 @@ def monitor(url):
     
     # Exclude unvalid url
     if response.status_code == 200:
-        continue
-    soup = BeautifulSoup(response.content)
+        soup = BeautifulSoup(response.content)
     
     # store data in a dictionary
     dict = {}
