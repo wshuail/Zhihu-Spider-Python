@@ -4,12 +4,12 @@
 This is a Python spider aiming to scrapy data on the question page of [Zhihu](http://www.zhihu.com/), a quora-like website popular in China.
 The data can be used to analyze factors influencing the activities of the questions.
 <br/>
-Specifically, functions below can be achieved by this spider：
+Specifically, functions below can be achieved by this spider：  
 1. Login in.  
-2. Scrapy latest questions.  
+2. Acsess and sve the latest questions.  
 3. Scrapy the relative data of these questions.  
 4. Save the data into MySQL database.  
-5. Scrapy the data at different time for Time Series Analysis.  
+5. Working at different time for Time Series Analysis.  
 
 Data scrapied includes:  
 - Length of the title.
