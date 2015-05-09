@@ -8,8 +8,6 @@ from bs4 import BeautifulSoup
 import sys
 import math
 import json
-import MySQLdb
-
 
 reload(sys)
 sys.setdefaultencoding('utf-8')
@@ -21,12 +19,11 @@ def login():
     """ 
     Login in www.zhihu.com firstly
 
-    Args:
-        None
-
-    Returns:
-        session login in.
-
+    define some essential objects, and get cookies for login in Zhihu.
+    param str email
+    param str password
+    param dic header
+    param '_xsrf': an random value, essential part of the post data for login. included in the cookies, or could be accessed from the web page.
     """
 
     login_url = 'http://www.zhihu.com/login'
@@ -78,24 +75,26 @@ def login():
         with open('captcha.gif', 'wb') as f:
             f.write(captcha.content)
 
-        print 'Please open the file captcha.gif and enter the captcha.'
+
+        
+        
+        print 'We have to input the captcha.\n Please open the file captcha.gif.'
         captcha = raw_input('Enter the characters on the figure here: ')
         captcha = str(captcha)
         data['captcha'] = captcha  # Add the values of the captcha in the form data.
-        # Post data with captcha.
         response = session.post(login_url, data = data, headers = header)
         json = response.json()
         code = json['r']  # Check if login in successfully the second time.
-        if code == 0:
-            print 'Login Successfully !!!'
-        elif code == 1:
+        if code == 1:
             print 'Login Failed !!!'
             for code, description in json.items():
                 print 'Here is the information about the failure login, %s: %s' %(code, description)
+        elif code == 0:
+            print 'Login Successfully!'
         else:
-            print 'OOPS! Please dno\'t to hesitate with me, and I will fix this bug asap.'
+            print 'OOPS! Please dno\'t to hesitate with me, and I will fix this error asap.'
     else:
-        print 'OOPS! Please dno\'t to hesitate with me, and I will fix this bug asap.'
+        print 'OOPS! Please dno\'t to hesitate with me, and I will fix this error asap.'
 
 
 def monitor(url):
@@ -123,25 +122,9 @@ def monitor(url):
         login()
     # session = requests.session()
     response = session.get(url)
-    
-    # Exclude unvalid url
-    if response.status_code == 200:
-        soup = BeautifulSoup(response.content)
-    
-    # store data in a dictionary
+    soup = BeautifulSoup(response.content)
     dict = {}
-
-    # Get the follower or the people answering the question who has the most funs. 
-    answerer_most_funs = [0]  # Avoid empty list for max() function.
-    follower_most_funs = [0]  # Avoid empty list for max() function.
-
-    # Initilize some data
-    total_follower_number_answerer = 0
-    total_comment_number = 0
-    total_upvote = 0
-    total_follower_follower = 0
-    follower_number = 0
- 
+    list = []
     header = {
             'Host': 'www.zhihu.com',
             'User-Agent': 'Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:37.0) Gecko/20100101 Firefox/37.0',
@@ -155,26 +138,30 @@ def monitor(url):
             'Pragma': 'no-cache',
             'Cache-Control': 'no-cache'
             }
+
+    total_follower_number_answerer = 0
+    total_comment_number = 0
+    total_upvote = 0
+    total_follower_follower = 0
+    follower_number = 0
     
-    # xsrf is one part of the data
     _xsrf = soup.find('input', attrs = {'name': '_xsrf'})['value']
     # print 'The value of xsrf: ', _xsrf
     
-    # Get the sampling time
-    scrapy_time = time.strftime('%Y-%m-%d-%H')
+    scrapy_time = time.strftime('%m-%d-%Y')
     dict['time'] = scrapy_time
 
     # get the id of the question
-    question_id = url[-8: ].encode('utf-8')
-    dict['question_id'] = question_id
-    # print 'The question id: ', question_id
+    id = url[-8: ]
+    dict['id'] = id
+    # print 'The id: ', id
 
-    # Get the length of the title
+    # Get the title
     title = soup.find('title').string.replace('\n', '')
     dict['len_title'] = len(title)
     # print 'Title: ', title
 
-    # Get the length of the  details
+    # Get the details
     detail = soup.find('div', id = 'zh-question-detail').get_text().replace('\n', '')
     len_detail = len(detail)
     dict['len_detail'] = len_detail
@@ -182,17 +169,19 @@ def monitor(url):
 
     # Get the number of visitor of this question.
     visitor_number = soup.find('meta', itemprop = 'visitsCount')['content']
-    dict['visitor_num'] = int(visitor_number)
+    dict['visitor_num'] = visitor_number
     # print 'How many people have visited this question? ', visitor_number
 
     # get the number of people who follow the relevant topic of the question
     topic_follower_number_doc = soup.find_all('div', class_ = 'zg-gray-normal')[2]
     topic_follower_number = topic_follower_number_doc.find_all('strong')[1].string
-    dict['topic_follower_num'] = int(topic_follower_number)
+    dict['topic_follower_num'] = topic_follower_number
     # print 'How many people follow the relevant topics: ', topic_follower_number
     
+
+
     # Get the number of the followers of the question
-    if soup.find('div', class_ = 'zg-gray-normal').string == None:
+    if soup.find('div', class_ = 'zh-question-followers-sidebar').get_text() != '还没有人关注该问题':
         follower_number = int(soup.find("div", class_ = "zg-gray-normal").a.strong.string)
         # print 'How many people following this question?', follower_number
         dict['follower_num'] = follower_number
@@ -204,36 +193,28 @@ def monitor(url):
 
         follower_response = session.get(followers_link)
         follower_soup = BeautifulSoup(follower_response.content)
-
-        # The value of xsrf is one part of the post data for more information on this page.
         _xsrf = follower_soup.find('input', attrs = {'name': '_xsrf'})['value']
         
-        # More than one page of followers would be considered.
         for i in xrange((follower_number - 1)/20 + 1):
-            if i == 0:  # the first (<)20 followers.
+            if i == 0:
                 if follower_soup.find_all('div', class_ = 'details zg-gray') != None:
                     user_detail_docs = follower_soup.find_all('div', class_ = 'details zg-gray')
                     for user_detail_doc in user_detail_docs:
                         follower_doc = user_detail_doc.find('a').string
                         # print follower_doc.string
                         follower_number = int(filter(lambda x: x.isdigit(), follower_doc))
-                        
-                        # Put each value into the list for the follower with most funs.
-                        follower_most_funs.append(follower_number)
                         # print follower_number
-
-                        # Count the total funs of the followers.
                         total_follower_follower += follower_number
                     # print 'How many people are following the people who follows this question?', total_follower_follower
                 else:
                     # print 'All followers are anonymous.'
                     follower_number = 0
-                    follower_most_funs.append(follower_number)
                     total_follower_follower += follower_number
 
                 # print 'How many people are following the people who follows this question?', total_follower_follower
 
-            else:  # More than 20 people are following the question
+            else:
+                # print 'More than 20 people follow this question.'
                 post_link = followers_link
                 # print post_link
                 header['Referer'] = post_link
@@ -244,68 +225,45 @@ def monitor(url):
                         '_xsrf': _xsrf
                         }
                 more_follower_response = session.post(post_link, data = post_data, headers = header)
-                
-                # Judge if post successfully
-                # response_status = more_follower_response.json()['r']
+                response_status = more_follower_response.json()['r']
                 # print 'The status of response: ', response_status
-                
-                # Get the lists of more followers' information.
                 follower_lists = more_follower_response.json()['msg'][1]
                 # print follower_lists
                 more_follower_soup = BeautifulSoup(follower_lists)
-                
-                # Avoid anonymous followers.
                 if more_follower_soup.find_all('div', class_ = 'details zg-gray') != None:
                     user_detail_docs = more_follower_soup.find_all('div', class_ = 'details zg-gray')
                     for user_detail_doc in user_detail_docs:
                         follower_doc = user_detail_doc.find('a').string
                         # print follower_doc.string
                         follower_number = int(filter(lambda x: x.isdigit(), follower_doc))
-                        
-                        # Put each value into the list for the follower with most funs.
-                        follower_most_funs.append(follower_number)
                         # print follower_number
-                        
-                        # Count total number the followers' funs
                         total_follower_follower += follower_number
                     # print 'How many people are following the people who follows this question?', total_follower_follower
 
                 else:
-                    # '(All) the followers are anonymous.'
-                    # The number of their followers could not be figured out. 
-                    follower_number = 0
-                    # Put each value into the list for the follower with most funs.
-                    follower_most_funs.append(follower_number)
-                    # Count total number the followers' funs
+                    # print 'All followers are anonymous.'
+                    follower_number = int(response.json()['msg'][0])
                     total_follower_follower += follower_number
         
                 # print 'How many people are following the people who follows this question?', total_follower_follower
-        
-        # Get the number of follower with most funs, and save it into the dictionary. 
-        bigest_follower = max(follower_most_funs)
-        dict['bigest_follower'] = int(bigest_follower)
 
         dict['follower_follower'] = total_follower_follower
     
     else:
-        # No people is followring the question.
         follower_number = 0
         total_follower_follower += follower_number
         # print 'No people is following this question.'
         
         dict['follower_num'] = follower_number
-        dict['bigest_follower'] = 0
         dict['follower_follower'] = total_follower_follower
 
    
     # Get the number of answer under this question.
-    # Judge if there is answer under this question.
     if soup.find('h3', id = 'zh-question-answer-num') != None: 
         answer_number = int(soup.find('h3', id = 'zh-question-answer-num')['data-num'])
         # print 'How many answers are under this question: ', answer_number
 
         # Get the number of people who follow the user answering the question.
-        # Judge if the number if answer is more than 50.
         for i in xrange((answer_number - 1)/50 + 1):
             if i == 0:  # All answers are on this page.
 
@@ -320,18 +278,12 @@ def monitor(url):
                         people_response = session.get(people_link)
                         people_soup = BeautifulSoup(people_response.content)
                         # Get the funs of this user.
-                        answerer_funs = people_soup.find('div', class_ = 'zm-profile-side-following zg-clear').find_all('a')[1].strong.string
-                        answerer_funs = int(answerer_funs)
-                        # print answerer funs 
-                        # Put it into the dictionary for the people with most funs.
-                        answerer_most_funs.append(answerer_funs)
-                        # Get the total funs's number of the people ansering this question.
-                        total_follower_number_answerer += answerer_funs
-                    
-                    else:  # The people answering this question are(is) anonymous.
-                        answerer_funs = 0
-                        answerer_most_funs.append(answerer_funs)
-                        total_follower_number_answerer += answerer_funs
+                        funs = people_soup.find('div', class_ = 'zm-profile-side-following zg-clear').find_all('a')[1].strong.string
+                        funs = int(funs)
+                        # print funs
+                        total_follower_number_answerer += funs
+                    else:
+                        funs = 0
                 # print 'How many followers of this people?', total_follower_number_answerer
                 
                 # Get the number of comments under the answers.
@@ -347,7 +299,8 @@ def monitor(url):
                             comment_number = 0
                             total_comment_number += comment_number
 
-                except:  # The answer is forbiden.
+                except:
+                    # print 'The answer is forbiden.'
                     comment_number = 0
                     total_comment_number += comment_number
                 # print 'Number of total comments: ', total_comment_number
@@ -358,13 +311,15 @@ def monitor(url):
                     for upvote_number_doc in upvote_number_docs:
                         upvote_number = int(upvote_number_doc.string)
                         total_upvote += upvote_number
-                except:  # The annswer is forbiden.
+                except:
+                    # print 'The annswer is forbiden.'
                     upvote_number = 0
                     total_upvote += upvote_number
                 # print 'How many people voted up for the answers: ', total_upvote
 
-            # Or, The number of answers are beyond 50 and need post data.  
+            # Or, The answers beyond 50 need post data.  
             else:
+                # print 'The answers are more than 50.'
                 post_url = 'http://www.zhihu.com/node/QuestionAnswerListV2'
                 offset = i*50
                 params = json.dumps({
@@ -377,11 +332,9 @@ def monitor(url):
                         '_xsrf': _xsrf
                         }
                 header['Referer'] = post_url
-                
                 more_answer_response = session.post(post_url, data = post_data, headers = header)
-                # post_status = more_answer_response.json()['r']
+                post_status = more_answer_response.json()['r']
                 # print 'Post status: ', post_status
-                # Get the list containing more answers.
                 answer_list = more_answer_response.json()['msg']
                 
                 for j in xrange(min(50, answer_number - i*50)):
@@ -397,22 +350,13 @@ def monitor(url):
                             # Get the number of his (her) followers.
                             answerer_response = session.get(people_link)
                             answerer_soup = BeautifulSoup(answerer_response.content)
-                            answerer_funs = answerer_soup.find('div', class_ = 'zm-profile-side-following zg-clear').find_all('a')[1].strong.string
-                            answerer_funs = int(answerer_funs)
-                            # print answerer_funs
-                            # Put into the dictionary for people wiith most funs 
-                            answerer_most_funs.append(answerer_funs)
-                            # Get the total number of funs of the peoples asswering this question.
-                            total_follower_number_answerer += answerer_funs
-                        
+                            funs = answerer_soup.find('div', class_ = 'zm-profile-side-following zg-clear').find_all('a')[1].strong.string
+                            funs = int(funs)
+                            # print funs
+                            total_follower_number_answerer += funs
                         else:
-                            # Anonymous user
-                            answerer_funs = int(answerer_funs)
-                            # print answerer_funs
-                            answerer_most_funs.append(answerer_funs)
-                            total_follower_number_answerer += answerer_funs
+                            None  # Anonymous user.
                     # print 'How many people are following the people who answer this question ?', total_follower_number_answerer
-                    
                     # Get the number of comments under the answers.
                     try:
                         comment_docs = soup.find('a', class_ = ' meta-item toggle-comment')
@@ -421,10 +365,9 @@ def monitor(url):
                         if comment_number != '':
                             total_comment_number += int(comment_number)
                         else:
-                            comment_number = 0
-                            total_comment_number += comment_number
-                    
-                    except:  # The answer is forbiden.
+                            None
+                    except:
+                        # print 'The answer is forbiden.'
                         comment_number = 0
                         total_comment_number += comment_number
                     # print 'Number of total comments: ', total_comment_number
@@ -438,19 +381,15 @@ def monitor(url):
                         upvote_number = 0
                         total_upvote  += upvote_number
                     # print 'How many people voted up for the answers: ', total_upvote
-        
-        # Get the number of funs for people with most followers
-        bigest_answerer = max(answerer_most_funs)
-
+    
     else:
         answer_number = 0
-        bigest_answerer = 0
     
     dict['answer_num'] = answer_number
     dict['followers_answerer'] = total_follower_number_answerer
     dict['comment_num'] = total_comment_number
     dict['upvote_num'] = total_upvote
-    dict['bigest_answerer'] = bigest_answerer
+    
     # print 'How many people are following this question?', follower_number 
     # print 'How many visitor of this question?', visitor_number
     # print 'How many people are following the relavant topics?', topic_follower_number
@@ -461,16 +400,10 @@ def monitor(url):
     
     return dict
 
-def collect(x):
+def collect():
 
     """
-    Collect questions for monitoring.i
-
-    Args:
-        Number of question need to be collected.
-
-    Returns: 
-        A json format file containing all the links of the questions.
+    Collect questions for monitoring.
     """
 
     initial_url = 'http://www.zhihu.com/log/questions'
@@ -480,7 +413,6 @@ def collect(x):
         login()
     response = session.get(initial_url)
     soup = BeautifulSoup(response.content)
-    # The value of _xsrf is essential for post data to get more questions.
     _xsrf = soup.find('input', attrs = {'name': '_xsrf'})['value']
     header = {
             'Host': 'www.zhihu.com',
@@ -497,21 +429,18 @@ def collect(x):
             }
 
     question_poll = []
-    while len(question_poll) < x:
+    while len(question_poll) < 30:
         question_docs = soup.find_all('h2', class_ = 'zm-item-title')
         for question_doc in question_docs:
             question_link_part = question_doc.find('a')['href']
             question_link = 'http://www.zhihu.com' + question_link_part
             # print question_link
-            # Put the link into the question poll to be stored into the json file.
             question_poll.append(question_link)
-        
-        # The start value is part of parameter to post to get more qestion. 
+
         start_value_doc = soup.find_all('div', class_ = 'zm-item')[19]['id']
         start_value = str(start_value_doc[-9: ])
-        # print start_value
         
-        # 'offset' is another part of post data, equaling with the number of questions collected.
+        # print start_value
         question_number = len(question_poll)
         header['Referer'] = initial_url
         post_data = {
@@ -520,56 +449,13 @@ def collect(x):
                 '_xsrf': _xsrf
                 }
         response = session.post(initial_url, data = post_data, headers = header)
-        # response_status = response.json()['r']
+        response_status = response.json()['r']
         # print response_status
 
-        # Get the list containing more question links.
         question_list = response.json()['msg'][1]
         soup = BeautifulSoup(question_list)
         
-        print 'Questions collected: ', len(question_poll)
-    return question_poll
+        return question_poll
 
-def save_mysql(dict):
-    '''
-    Save the data into MySQL
 
-    Args:
-        Data on question from function monitor().
-
-    Returns:
-        Data in MySQL
-    '''
-    # Connect with the MySQLdb module.
-    db = MySQLdb.connect(host = 'localhost', user = 'root', db = 'zhihu')
-    cursor = db.cursor()
-
-    # Code for create the tables in MySQL
-#    mysql> CREATE TABLE zhihu_data (
-#        -> id MEDIUMINT UNSIGNED PRIMARY KEY AUTO_INCREMENT,
-#        -> len_title SMALLINT UNSIGNED,
-#        -> answer_num SMALLINT UNSIGNED,
-#        -> follower_num MEDIUMINT UNSIGNED,
-#        -> len_detail SMALLINT UNSIGNED,
-#        -> follower_follower MEDIUMINT UNSIGNED,
-#        -> bigest_answerer MEDIUMINT UNSIGNED,
-#        -> upvote_num SMALLINT UNSIGNED,
-#        -> visitor_num MEDIUMINT UNSIGNED,
-#        -> followers_answerer MEDIUMINT UNSIGNED,
-#        -> time DATETIME,
-#        -> topic_follower_num MEDIUMINT UNSIGNED,
-#        -> comment_num SMALLINT UNSIGNED,
-#        -> bigest_follower MEDIUMINT UNSIGNED,
-#        -> question_id VARCHAR(12)
-#        -> );
-
-    # MySQL code for inserting data into MySQL
-    sql = "INSERT INTO zhihu_data(len_title, answer_num, follower_num, len_detail, follower_follower, bigest_answerer, upvote_num, visitor_num, followers_answerer, time, topic_follower_num, comment_num, bigest_follower, question_id) VALUES ('%d', '%d', '%d', '%d', '%d', '%d', '%d', '%d', '%d', '%s', '%d', '%d', '%d', '%s')" % (dict['len_title'], dict['answer_num'], dict['follower_num'], dict['len_detail'], dict['follower_follower'], dict['bigest_answerer'], dict['upvote_num'], dict['visitor_num'], dict['followers_answerer'], dict['time'], dict['topic_follower_num'], dict['comment_num'], dict['bigest_follower'], dict['question_id'])
-    
-    # Try to excute.
-    try:
-        cursor.execute(sql)
-        db.commit()
-    except:
-        db.rollback()
-
+# monitor('http://www.zhihu.com/question/29990577')
