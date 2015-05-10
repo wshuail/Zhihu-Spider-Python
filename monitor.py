@@ -28,8 +28,8 @@ def main():
             error += 1
             print 'OOPS! %d errors happened!' % error
             continue
-
-    print 'Number of errors happened: %d', %error
+    print 'Number if questions visited: %d' % len(visited)
+    print 'Number of errors happened: %d' % error
 
 if __name__ == '__main__':
     main()
