@@ -127,7 +127,7 @@ def monitor(url):
     # Exclude unvalid url
     if response.status_code == 200:
         soup = BeautifulSoup(response.content)
-    
+
     # store data in a dictionary
     dict = {}
 
@@ -368,7 +368,8 @@ def monitor(url):
                 post_url = 'http://www.zhihu.com/node/QuestionAnswerListV2'
                 offset = i*50
                 params = json.dumps({
-                        'url_token': int(url[-8: ]), 'pagesize': 50,
+                        'url_token': int(response.url[30:38]),  # use response.url to avoid bug caused by redirection
+                        'pagesize': 50,
                         'offset': offset
                         })
                 post_data = {
@@ -376,7 +377,7 @@ def monitor(url):
                         'params': params,
                         '_xsrf': _xsrf
                         }
-                header['Referer'] = post_url
+                header['Referer'] = response.url
                 
                 more_answer_response = session.post(post_url, data = post_data, headers = header)
                 # post_status = more_answer_response.json()['r']
@@ -458,7 +459,8 @@ def monitor(url):
     # print 'How many comments are under this question?', total_comment_number
     # print 'How many people voted up for the answers: ', total_upvote
     # print 'How many people are following the people who answer this question ?', total_follower_number_answerer
-    
+   
+    print dict
     return dict
 
 def collect(x):
@@ -573,3 +575,4 @@ def save_mysql(dict):
     except:
         db.rollback()
 
+monitor('http://www.zhihu.com/question/30005071')
