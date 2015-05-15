@@ -460,7 +460,7 @@ def monitor(url):
     # print 'How many people voted up for the answers: ', total_upvote
     # print 'How many people are following the people who answer this question ?', total_follower_number_answerer
    
-    print dict
+    # print dict
     return dict
 
 def collect(x):
@@ -575,4 +575,3 @@ def save_mysql(dict):
     except:
         db.rollback()
 
-monitor('http://www.zhihu.com/question/30005071')
