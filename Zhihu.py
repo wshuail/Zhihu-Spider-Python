@@ -6,6 +6,7 @@ import requests
 import time
 from bs4 import BeautifulSoup
 import sys
+from sys import exit
 import math
 import json
 import MySQLdb
@@ -36,6 +37,9 @@ def login():
     config.read('config.ini')
     email = config.get('info', 'email')
     password = config.get('info', 'password')     
+    if email == '' or password == '':
+        print 'Please configure your email and password in config.ini firstly.'
+        exit(0)
 
     global session
     session = requests.session()
