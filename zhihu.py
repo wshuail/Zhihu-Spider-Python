@@ -1,4 +1,4 @@
-# !/usr/bin/env python
+# !/usr/bin/env python2
 # -*- coding: utf-8 -*-
 
 import ConfigParser
@@ -101,5 +101,32 @@ def login():
     else:
         print 'OOPS! Please don\'t to hesitate with me, and I will fix this bug asap.'
 
-if __name__ == '__main__':
-    login()
+class Question(object):
+
+    def __init__(self, url):
+        self.url = url
+
+    def parse(self, url):
+        global session
+        if session == None:
+            login()
+
+        response = session.get(self.url)
+        if response.status_code == 200:
+            soup = BeautifulSoup(response.content)
+        return soup
+
+
+    def get_title(self):
+        soup = self.parse(self.url)
+        title = soup.find('title').string.replace('\n', '')
+        return title
+
+    def get_detail(self):
+        soup = self.parse(self.url)
+        detail = soup.find('div', id = 'zh-question-detail').find('div', class_ = 'zm-editable-content').get_text() 
+        if detail:
+            return detail
+        else:
+            return None
+
