@@ -134,3 +134,25 @@ class Question(object):
         else:
             return None
 
+    def get_visitor_num(self):
+        if self.soup == None:
+            self.soup = self.parse(self.url)
+        visitor_number = self.soup.find('meta', itemprop = 'visitsCount')['content']
+        if visitor_number:
+            return visitor_number
+        else:
+            visitor_number = 0
+            return visitor_number
+
+    def get_topic_follower_num(self):
+        if self.soup == None:
+            self.soup = self.parse(self.url)
+        topic_follower_number_doc = self.soup.find_all('div', class_ = 'zg-gray-normal')[2]
+        topic_follower_number = topic_follower_number_doc.find_all('strong')[1].string
+        if topic_follower_number:
+            return topic_follower_number
+        else:
+            topic_follower_number = 0
+            return topic_follower_number
+
+
