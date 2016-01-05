@@ -155,4 +155,15 @@ class Question(object):
             topic_follower_number = 0
             return topic_follower_number
 
+    def get_topics(self):
+        question_topics = []
+        if self.soup == None:
+            self.soup = self.parse(self.url)
+        if self.soup.find('a', class_ = 'zm-item-tag') != None:
+            topic_docs = self.soup.find_all('a', class_ = 'zm-item-tag')
+            for topic_doc in topic_docs:
+                topic = topic_doc.get_text()
+                question_topics.append(topic)
+        return question_topics
+        # return json.dumps(question_topics, ensure_ascii = False, encoding = 'UTF-8')
 
