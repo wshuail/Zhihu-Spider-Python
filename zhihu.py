@@ -125,11 +125,22 @@ class Question(object):
         title = self.soup.find('title').string.replace('\n', '')
         return title
 
+    def get_topics(self):
+        question_topics = []
+        if self.soup == None:
+            self.soup = self.parse(self.url)
+        topic_docs = self.soup.find_all('a', class_ = 'zm-item-tag')
+        if topic_docs != None:
+            for topic_doc in topic_docs:
+                topic = topic_doc.get_text()
+                question_topics.append(topic)
+        return question_topics
+
     def get_detail(self):
         if self.soup == None:
             self.soup = self.parse(self.url)
         detail = self.soup.find('div', id = 'zh-question-detail').find('div', class_ = 'zm-editable-content').get_text() 
-        if detail:
+        if detail != None:
             return detail
         else:
             return None
@@ -144,6 +155,14 @@ class Question(object):
             visitor_number = 0
             return visitor_number
 
+    def get_question_follower_num(self):
+        if self.soup == None:
+            self.soup = self.parse(self.url)
+        question_follower_number = self.soup.find('div', class_ = 'zh-question-followers-sidebar').a.strong.string
+        if question_follower_number == None:
+            question_follower_number = 0
+        return question_follower_number
+
     def get_topic_follower_num(self):
         if self.soup == None:
             self.soup = self.parse(self.url)
@@ -155,15 +174,13 @@ class Question(object):
             topic_follower_number = 0
             return topic_follower_number
 
-    def get_topics(self):
-        question_topics = []
+    def get_answer_num(self):
         if self.soup == None:
             self.soup = self.parse(self.url)
-        if self.soup.find('a', class_ = 'zm-item-tag') != None:
-            topic_docs = self.soup.find_all('a', class_ = 'zm-item-tag')
-            for topic_doc in topic_docs:
-                topic = topic_doc.get_text()
-                question_topics.append(topic)
-        return question_topics
-        # return json.dumps(question_topics, ensure_ascii = False, encoding = 'UTF-8')
-
+        answer_number_doc = self.soup.find('h3', id = 'zh-question-answer-num')
+        if answer_number_doc != None:
+            answer_number = answer_number_doc['data-num']
+        else:
+            answer_number = 0
+        return answer_number
+   
