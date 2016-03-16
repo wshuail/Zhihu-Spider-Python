@@ -45,12 +45,12 @@ class Question(object):
     def title(self):
         if self.soup == None:
             self.soup = self.parse(self.url)
-        title = self.soup.find('title').string.replace('\n', '')
+        title = self.soup.find('title').string.replace('\n', '').replace(' - 知乎', '')
         return title
 
     def topics(self):
         topics = []
-        if self.soup == None:
+        if self.soup is None:
             self.soup = self.parse(self.url)
         docs = self.soup.find_all('a', class_ = 'zm-item-tag')
         if docs != None:
@@ -60,59 +60,63 @@ class Question(object):
         return topics
 
     def detail(self):
-        if self.soup == None:
+        if self.soup is None:
             self.soup = self.parse(self.url)
-        detail = self.soup.find('div', id = 'zh-question-detail').find('div', class_ = 'zm-editable-content').get_text() 
+        detail = self.soup.find('div', id = 'zh-question-detail').get_text()
+        #.find('div', class_ = 'zm-editable-content').get_text()
         if detail != None:
             return detail
         else:
             return None
 
     def visitor_num(self):
-        if self.soup == None:
+        if self.soup is None:
             self.soup = self.parse(self.url)
-        visitor_number = self.soup.find('meta', itemprop = 'visitsCount')['content']
-        if visitor_number == None:
+        #visitor_number_doc = self.soup.find('meta', itemprop = 'visitsCount')
+        visitor_number = self.soup.find('meta', {'itemprop': 'visitsCount'})['content']
+        if visitor_number is None:
             visitor_number = 0
         return visitor_number
 
     def follower_num(self):
-        if self.soup == None:
+        if self.soup is None:
             self.soup = self.parse(self.url)
-        follower_number = self.soup.find('div', class_ = 'zh-question-followers-sidebar').a.strong.string
-        if follower_number == None:
+        doc = self.soup.find('div', class_ = 'zh-question-followers-sidebar').find('div')
+        if len(list(doc.children)) == 1:
             follower_number = 0
+        # elif len(list(doc.children)) == 3:
+        else:
+            follower_number = doc.a.strong.string
         return follower_number
 
     def topic_follower_num(self):
-        if self.soup == None:
+        if self.soup is None:
             self.soup = self.parse(self.url)
         doc = self.soup.find_all('div', class_ = 'zg-gray-normal')[2]
         topic_follower_num = doc.find_all('strong')[1].string
-        if topic_follower_num == None:
+        if topic_follower_num is None:
             topic_follower_num = 0
         return topic_follower_num
 
     def answer_num(self):
-        print 'test'
-        if self.soup == None:
+        if self.soup is None:
             self.soup = self.parse(self.url)
         doc = self.soup.find('h3', id = 'zh-question-answer-num')
         if doc != None:
             answer_num = doc['data-num']
         else:
             answer_num = 0
-        print 'answer_num: ', answer_num
+        # print 'answer_num: ', answer_num
         self.answer_number = answer_num
         return answer_num
-    
+
     def answer_links(self):
-        if self.soup == None:
+        if self.soup is None:
             self.soup = self.parse(self.url)
         answer_links = []
         docs = self.soup.find_all('span', class_ = 'answer-date-link-wrap')
         for doc in docs:
-            answer_link = 'https://www.zhihu.com' + answer_link_doc.find('a')['href']
+            answer_link = 'https://www.zhihu.com' + doc.find('a')['href']
             answer_links.append(answer_link)
         return answer_links
 
