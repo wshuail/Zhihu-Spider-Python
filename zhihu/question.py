@@ -1,46 +1,25 @@
 # !/usr/bin/env python2
 # -*- coding: utf-8 -*-
 
-import ConfigParser
 import requests
 import time
 from bs4 import BeautifulSoup
 import sys
-import math
-import json
 import re
 from random import randint
-from chardet import detect
-import functools
 import lxml
 
-from zhihu import login
-from zhihu import session
+from zhihu import Zhihu
 
 reload(sys)
 sys.setdefaultencoding('utf-8')
 
-class Question(object):
+class Question(Zhihu):
 
-    def __init__(self, url):
+    def __init__(self, url, session = None, soup = None):
+        Zhihu.__init__(self, session, soup)
         self.url = url
-        self.soup = None
         self.answer_number = None
-
-    def parse(self, url):
-        global session
-        if session == None:
-            session = login()
-
-        response = session.get(url)
-        if response.status_code == 200:
-            try:
-                soup = BeautifulSoup(response.content, 'lxml')
-            except:
-                soup = BeautifulSoup(response.content, 'html.parser')
-        self.soup = soup
-        return soup
-
 
     def title(self):
         if self.soup == None:
@@ -72,7 +51,6 @@ class Question(object):
     def visitor_num(self):
         if self.soup is None:
             self.soup = self.parse(self.url)
-        #visitor_number_doc = self.soup.find('meta', itemprop = 'visitsCount')
         visitor_number = self.soup.find('meta', {'itemprop': 'visitsCount'})['content']
         if visitor_number is None:
             visitor_number = 0
@@ -106,7 +84,6 @@ class Question(object):
             answer_num = doc['data-num']
         else:
             answer_num = 0
-        # print 'answer_num: ', answer_num
         self.answer_number = answer_num
         return answer_num
 

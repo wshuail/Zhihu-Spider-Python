@@ -1,32 +1,26 @@
 # !/usr/bin/env python2
 # -*- coding: utf-8 -*-
 
-import ConfigParser
 import requests
 import time
 from bs4 import BeautifulSoup
 import sys
-import math
 import json
 import re
-from random import randint
-from chardet import detect
-import functools
 import lxml
 
 from question import Question
+from zhihu import Zhihu
 
 reload(sys)
 sys.setdefaultencoding('utf-8')
 
-session = None
 
+class User(Zhihu):
 
-class User(Question):
-
-    def __init__(self, url):
+    def __init__(self, url, session = None, soup = None):
+        Zhihu.__init__(self, session, soup)
         self.url = url
-        self.soup = None
         self.profile_url = self.url + '/about'
         self.url_suffix = re.match(r'.+/people/(.+)', self.url).group(1)
         self.ask_url = self.url + '/asks'
@@ -40,17 +34,18 @@ class User(Question):
         self.collection_number = None
         self.edit_number = None
 
+
     def user_name(self):
         if self.soup is None:
             self.soup = self.parse(self.url)
-        name = self.soup.find('div', {'class': 'name'}).string
+        name = self.soup.find_all('span', {'class': 'name'})[1].string
         return name
 
     def weibo(self):
         if self.soup is None:
             self.soup = self.parse(self.url)
         doc = self.soup.find('a', {'class': 'zm-profile-header-user-weibo'})
-        if weibo is not None:
+        if doc is not None:
             weibo = doc['href']
         return weibo
 
@@ -214,10 +209,10 @@ class User(Question):
         return edit_num
 
     def user_ask(self):
-        if self.ask_num is None:
-            self.ask_num = self.ask_num()
+        if self.ask_number is None:
+            self.ask_number = self.ask_num()
         ask_link_list = []
-        if self.ask_num > 0:
+        if self.ask_number > 0:
             for i in range(1, int(int(self.ask_number)/20) + 2):
                 ask_url = self.ask_url + '?page=' + str(i)
                 ask_soup = self.parse(ask_url)
@@ -229,11 +224,11 @@ class User(Question):
         return ask_link_list
 
     def user_answer(self):
-        if self.answer_num is None:
-            self.answer_num = self.answer_num()
+        if self.answer_number is None:
+            self.answer_number = self.answer_num()
         answer_link_list = []
-        if self.answer_num > 0:
-            for i in range(1, int(self.answer_num/20) + 2):
+        if self.answer_number > 0:
+            for i in range(1, int(int(self.answer_number)/20) + 2):
                 answer_url = self.answer_url + '?page=' + str(i)
                 soup = self.parse(answer_url)
                 docs = soup.find_all('h2')

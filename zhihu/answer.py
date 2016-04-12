@@ -1,44 +1,39 @@
 # !/usr/bin/env python2
 # -*- coding: utf-8 -*-
 
-import ConfigParser
 import requests
-import time
 from bs4 import BeautifulSoup
 import sys
-import math
-import json
 import re
 from random import randint
-from chardet import detect
-import functools
 import lxml
 
 from question import Question
+from zhihu import Zhihu
 
 reload(sys)
 sys.setdefaultencoding('utf-8')
 
 
-class Answer(Question):
+class Answer(Zhihu):
 
-    def __init__(self, url):
+    def __init__(self, url, session = None, soup = None):
+        Zhihu.__init__(self, session, soup)
         self.url = url
-        self.soup = None
-        self.vote_num = None
+        self.vote_number = None
 
     def vote_num(self):
-        if self.soup == None:
+        if self.soup is None:
             self.soup = self.parse(self.url)
         vote_num = self.soup.find('span', class_ = 'count').string
-        self.vote_num = vote_num
+        self.vote_number = vote_num
         return vote_num
-        
+
     def voter(self):
-        if self.soup == None:
+        if self.soup is None:
             self.soup = self.parse(self.url)
-        if self.vote_num == None:
-            vote_num = self.get_vote_num()
+        if self.vote_number is None:
+            self.vote_number = self.vote_num()
         voter_aid_list = []
         voter_aid_doc = self.soup.find('div', 'zm-item-answer  zm-item-expanded')
         voter_aid = voter_aid_doc['data-aid']
@@ -46,9 +41,9 @@ class Answer(Question):
         voter_info_list = []
 
         vote_link_prefix = 'https://www.zhihu.com/answer/' + str(voter_aid) + '/voters_profile?&offset='
-        for i in range(0, int(int(vote_num)/10 + 1)):
+        for i in range(0, int(int(self.vote_number)/10 + 1)):
             vote_link = vote_link_prefix + str(i * 10)
-            vote_response = session.get(vote_link)
+            vote_response = self.session.get(vote_link)
             vote_json = vote_response.json()
             vote_payload = vote_json['payload']
             for vote_payload_item in vote_payload:
@@ -72,7 +67,7 @@ class Answer(Question):
         return voter_info_list
 
     def author(self):
-        if self.soup == None:
+        if self.soup is None:
             self.soup = self.parse(self.url)
         author_info = {}
         doc = self.soup.find('div', {'class': 'answer-head'}).find('a', {'class': 'author-link'})
