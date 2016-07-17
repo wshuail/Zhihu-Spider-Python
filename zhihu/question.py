@@ -1,24 +1,19 @@
 # !/usr/bin/env python2
 # -*- coding: utf-8 -*-
 
-import requests
-import time
-from bs4 import BeautifulSoup
-import sys
-import re
-from random import randint
-import lxml
-
 from zhihu import Zhihu
 
+import sys
 reload(sys)
 sys.setdefaultencoding('utf-8')
 
+
 class Question(Zhihu):
 
-    def __init__(self, url, session = None, soup = None):
-        Zhihu.__init__(self, session, soup)
+    def __init__(self, url):
+        Zhihu.__init__(self)
         self.url = url
+        # self.soup = None
         self.answer_number = None
 
     def title(self):
@@ -28,6 +23,7 @@ class Question(Zhihu):
         return title
 
     def topics(self):
+        print 'self.session', self.session
         topics = []
         if self.soup is None:
             self.soup = self.parse(self.url)

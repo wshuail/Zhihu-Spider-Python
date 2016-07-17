@@ -1,24 +1,19 @@
 # !/usr/bin/env python2
 # -*- coding: utf-8 -*-
 
-import requests
-from bs4 import BeautifulSoup
-import sys
-import re
-from random import randint
-import lxml
-
 from question import Question
 from zhihu import Zhihu
 
+from bs4 import BeautifulSoup
+import sys
 reload(sys)
 sys.setdefaultencoding('utf-8')
 
 
 class Answer(Zhihu):
 
-    def __init__(self, url, session = None, soup = None):
-        Zhihu.__init__(self, session, soup)
+    def __init__(self, url):
+        Zhihu.__init__(self)
         self.url = url
         self.vote_number = None
 
@@ -81,4 +76,17 @@ class Answer(Zhihu):
 
         return author_info
 
+    def answer(self):
+        if self.soup is None:
+            self.soup = self.parse(self.url)
+        docs = self.soup.find_all('div', {'class': 'zm-editable-content'})
+        answer = docs[1].get_text()
+        return answer
+
+    def create_time(self):
+        if self.soup is None:
+            self.soup = self.parse(self.url)
+
+        edit_date = self.soup.find('a', {'class': 'answer-date-link'}).string
+        return edit_date
 

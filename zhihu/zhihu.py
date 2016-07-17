@@ -14,11 +14,13 @@ import lxml
 reload(sys)
 sys.setdefaultencoding('utf-8')
 
+
 class Zhihu(object):
 
-    def __init__(self, session = None, soup = None):
+    def __init__(self):
         self.session = None
         self.soup = None
+        self.cookies = None
         self.login_url = 'http://www.zhihu.com/login/email'
         self.header = {'X-Requested-With': 'XMLHttpRequest',
             'Connection': 'Keep-Alive',
@@ -63,11 +65,11 @@ class Zhihu(object):
                 'email': self.email,
                 'password': self.password,
                 '_xsrf': _xsrf,  # get from the cookies
-                'rememberme': 'y'
+                'rememberme': 'true'
                 }
 
-        session = requests.session()
-        response = session.post(self.login_url, data = data, headers = self.header)
+        self.session = requests.session()
+        response = self.session.post(self.login_url, data = data, headers = self.header)
         print 'response: ', response.status_code
 
         # judge if login successfully
@@ -77,8 +79,8 @@ class Zhihu(object):
         if code == 0:
             print 'Login Successfully !!!'
         elif code == 1:  # It's most likely that there is the captcha.
-            captcha_url = 'http://www.zhihu.com/captcha.gif?r=' + str(int(time.time()*1000))
-            captcha = session.get(captcha_url)
+            captcha_url = 'http://www.zhihu.com/captcha.gif?r=' + str(int(time.time()*1000)) + '&type=login&lang=en'
+            captcha = self.session.get(captcha_url)
             with open('captcha.gif', 'wb') as f:
                 f.write(captcha.content)
 
@@ -87,11 +89,12 @@ class Zhihu(object):
             captcha = str(captcha)
             data['captcha'] = captcha  # Add the values of the captcha in the form data.
             # Post data with captcha.
-            response = session.post(self.login_url, data = data, headers = self.header)
+            response = self.session.post(self.login_url, data = data, headers = self.header)
             print 'response: ', response.status_code
             json = response.json()
             code = json['r']  # Check if login in successfully the second time.
             if code == 0:
+                self.cookies = response.cookies
                 print 'Login Successfully !!!'
             elif code == 1:
                 print 'Login Failed !!!'
@@ -105,15 +108,13 @@ class Zhihu(object):
             print 'OOPS! Please don\'t hesitate to contact with me, and I will fix this bug asap.'
             sys.exit(0)
 
-        self.session = session
-
         return self.session
 
     def parse(self, url):
         if self.session == None:
             self.session = self.login()
 
-        response = self.session.get(url)
+        response = self.session.get(url, headers = self.header, cookies = self.cookies)
         if response.status_code == 200:
             try:
                 self.soup = BeautifulSoup(response.content, 'lxml')
@@ -122,4 +123,11 @@ class Zhihu(object):
         else:
             print 'Failed to open the url.'
         return self.soup
+
+
+
+
+
+
+
 

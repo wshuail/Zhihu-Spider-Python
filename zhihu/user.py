@@ -1,25 +1,19 @@
 # !/usr/bin/env python2
 # -*- coding: utf-8 -*-
 
-import requests
-import time
-from bs4 import BeautifulSoup
-import sys
-import json
-import re
-import lxml
-
 from question import Question
 from zhihu import Zhihu
 
+import re
+import sys
 reload(sys)
 sys.setdefaultencoding('utf-8')
 
 
 class User(Zhihu):
 
-    def __init__(self, url, session = None, soup = None):
-        Zhihu.__init__(self, session, soup)
+    def __init__(self, url):
+        Zhihu.__init__(self)
         self.url = url
         self.profile_url = self.url + '/about'
         self.url_suffix = re.match(r'.+/people/(.+)', self.url).group(1)
@@ -47,8 +41,15 @@ class User(Zhihu):
         doc = self.soup.find('a', {'class': 'zm-profile-header-user-weibo'})
         if doc is not None:
             weibo = doc['href']
-        return weibo
+            return weibo
 
+    def profile(self):
+        if self.soup is None:
+            self.soup = self.parse(self.url)
+        doc = self.soup.find('div', {'class': 'body'}).find('img', {'class': 'Avatar'})
+        if doc is not None:
+            profile_link = doc['src'][0: len(doc['src']) - 5] + 'r.jpg'
+        return profile_link
 
     def signature(self):
         if self.soup is None:
